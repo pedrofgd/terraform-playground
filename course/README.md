@@ -77,6 +77,10 @@ label.name_label.key
 
 ## Variables and outputs
 
+* Input variables
+* Local values (locals)
+* Output values
+
 **Variables:**
 ```
 variable "name_label" {
@@ -91,7 +95,7 @@ Variable reference:
 `var.<name_label>` => `var.aws_region`, por exemplo
 
 **Terraform Data Types**
-- Primitive => string, number, boolean
+- Primitive => string, number, bool
 - Collection => list (ordenado), set (não ordenado), map (key-value)
 - Strucutural => tuple, object
 
@@ -146,3 +150,60 @@ Referencing Map Values
 var.<name_label>.key_name ou var.<name_label>["key_name"]
 var.aws_instance_sizes.small or var.aws_instance_sizes["small"]
 ```
+
+[Exemplo em base_web_app/variables.tf](/course/base_web_app/variables.tf)
+
+### Local values
+
+```
+locals {
+  key = "value"
+}
+```
+
+Locals reference:
+```
+local.<name_label> # on singular...
+```
+
+[Exemplo em base_web_app/locals.tf](/course/base_web_app/locals.tf)
+
+### Output values
+
+"How to get information out of terraform. 
+Printed out to the terminal window at the end of configuration run."
+
+Sintaxe:
+```
+output "name_label" {
+  value = output_value
+  description = "Description of output"
+  sensitive = true | false
+}
+```
+
+## Supply Variable Values
+
+* `default` value (no arquivo variables)
+* `-var` flag
+```
+terraform apply -var="image_id=ami-abc123"
+terraform apply -var='image_id_list=["ami-abc123","ami-def456"]' -var="instance_type=t2.micro"
+terraform apply -var='image_id_map={"us-east-1":"ami-abc123","us-east-2":"ami-def456"}'
+```
+* `-var-file` flag
+```
+terraform apply -var-file="testing.tfvars"
+```
+* `terraform.tfvars` ou `terraform.tfvars.json`
+* `.auto.tfvars` ou `.auto.tfvars.json` no mesmo diretório
+* Environment variable `TF_VAR_<variable_name>`
+
+**Ordem (evalutaion precedence):**
+1. `TF_VAR_`
+2. `.tfvars` ou .json
+3. `.auto.tfvars` ou .json
+4. `-var-flie` flag
+5. `-var` flag
+6. **command line prompt**
+
