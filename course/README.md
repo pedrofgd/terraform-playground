@@ -207,3 +207,14 @@ terraform apply -var-file="testing.tfvars"
 5. `-var` flag
 6. **command line prompt**
 
+## Terraform State
+
+- `terraform state list`: list all state resources
+- `terraform state show ADDRESS`: show a speciefic resource
+- `terraform state mv SOURCE ADDRESS`: move an item in state
+- `terraform state rm ADDRESS`: remove an item in state
+
+**1st rule of Terraform:** make all changes with Terraform.
+
+**Obs:** terraform.tfstate guarda as informações de estado **inclusive os outputs** da última execução.
+
