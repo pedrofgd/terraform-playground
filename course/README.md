@@ -354,3 +354,105 @@ provisioner "remote_exec" {
 
 `terraform fmt` formats files for standard patterns
 
+## Loops in Terraform
+
+* Count
+  * Create multiple instances of a resource when the instances are very simular in nature
+  * Receives an integer (including 0, for create with condition, for example)
+* For_each
+  * Takes a set or a map as a value
+  * Is use instead of count in cases that each instance will be significantly different than the others (gives a lot more flexibility than a simple count integer)
+* Dynamic blocks
+  * Create multiple instances of a nested block inside a parent object
+  * Advanced topic (**not** covered in the getting started course)
+
+### Count syntax
+
+```
+resource "aws_instance" "web_server" {
+  count = 3
+  tags = {
+    Name = "web-server-${count.index}"
+  }
+}
+```
+
+When `count` meta argument is used, a new special variable is available: `count.index`, that resolves for the current iteration of the loop
+  * It can be used anywhere in the resource configuration block
+  * Count **starts at 0**
+
+The above example would create 3 instances of AWS EC2 instances:
+  * web-server-0
+  * web-server-1
+  * web-server-2
+
+**Count references:**
+
+`<resource_type>.<name_label>[element].<attribute>`
+
+`aws_instance.web_server[0].name` for Single instance
+
+`aws_instance.web_server[*].name` for List of all instances
+
+### For_each syntax
+
+```
+resource "aws_s3_object_bucket" "taco_toppings" {
+  for_each = {
+    cheese = "cheese.png"
+    lettuce = "lettuce.png"
+  }
+  key = each.key      # cheese and lettuce
+  value = each.value  # cheese.png and lettuce.png in case of map
+}
+```
+
+The above example would create 2 S3 bucket objects.
+
+**Obs:** If `for_each` is iterating over a set instead of a map, `each.key = each.value`
+
+**For_each references:**
+
+`<resource_type>.<name_label>[key].<attribute>`
+
+`aws_s3_bucket_object.taco_toppings["cheese"].id` for Single instance
+
+`aws_s3_bucket_object.taco_toppings[*].id` for List of all instances
+
+## Functions and Expressions
+
+### Terraform Expressions
+
+We already used some Terraform Expressions: the **interpolation**, to include resource and variable values in string and the **herodoc**, to pass an entire stirng to an argument like `user_date`.
+
+* Arithmetic and logical operators
+* Conditional expresions
+* For expression
+
+### Terraform Functions
+
+* Are built into Terraform binaries
+* Func_name(arg1, agr2, arg3, ...)
+
+**Common categories and examples:**
+* Numeric (`min(42, 13, 7)`)
+* String (`lower("TACOS")`)
+* Collection (`merge(map1, map2)`)
+* IP network (`cidrsubnet`)
+* Filesystem (`file(path)`)
+* Type conversion: (`toset()`)
+
+Examples:
+```
+min(42,5,16)
+lower("TACOCAT")
+cidrsubnet(var.vpc_cidr_block, 8, 0)
+cidrhost(cidrsubnet(var.vpc_cidr_block, 8, 0),5)
+lookup(local.common_tags, "company", "Unknown")
+lookup(local.common_tags, "missing", "Unknown")
+local.common_tags
+```
+
+### Terraform console
+
+`terraform console` starts a interactive environment where we can test different functions with real data from state
