@@ -1,6 +1,11 @@
 # Updating my configuration with more resources
 Modulo 5
 
+## Potential improvements
+
+- Multi regions
+- Multi instances
+
 ## Deployment Architecture
 
 * VPC (Virtual Private Cloud)

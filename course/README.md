@@ -46,7 +46,7 @@ terraform -install-autocomplete
   * Gets data it may be used in configuration
 
 **Exemplos de sintaxe:**
-``` JSON
+```
 block_type "label" "name_label" {
    key = "value"
    nested_block {
@@ -217,4 +217,140 @@ terraform apply -var-file="testing.tfvars"
 **1st rule of Terraform:** make all changes with Terraform.
 
 **Obs:** terraform.tfstate guarda as informações de estado **inclusive os outputs** da última execução.
+
+## Terraform Providers
+
+* Public and private registries
+* `Official`, `Verified` and `Community`
+* Providers are collections of resources and data sources
+* Semantic version numberered
+
+Terraform block syntax:
+```
+terraform {
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+      version "~>3.0"
+    }
+  }
+}
+```
+
+Provider block syntax:
+```
+provider "provider_name" {
+  alias = "alias_name"
+  # Provider specific arguments
+}
+```
+
+**Obs:** `alias` permite criar múltiplas instâncias de um provider. Um recurso pode usar uma instância específica com o argumento `provider`. **Ambos são opcionais**
+
+Exemplo:
+```
+provider "aws" {
+  alias = "west"
+  # Provider specific arguments
+}
+
+resource "aws_instance" "web_server" {
+  provider = aws.west
+  # Resource specific arguments
+}
+```
+
+Se o argumento `provider` não for especificado no recurso, o Terraform vai usar o provedor padrão, sem alias.
+
+### Provider version
+
+`~>` pode ser usado para pegar a versão mais atualizada de uma major version específica. Por exemplo:
+* `~>3.0` pega a versão 3.x (minor version mais atualizada)
+* `~>3.1` pega a versão 3.1.x (x é a versão mais atualizada)
+
+## Terraform Planning
+
+Order in wich to create, update or delete objects.
+
+- Dependency graph based on what is defined in the code
+- List of additions, updates and deletions
+- Parallel execution
+
+How Terraform defines order in wich changes need to happen? **References**.
+
+Example:
+
+![Terraform mapping dependencies example](/course/assets/tf_determining_dependencies_module_6_video_9.png)
+
+"Sometimes a dependency is non obvious, and we need to explicity tell Terraform about it"
+
+Example (that happens at `/03_s3_with_website`):
+
+![Terraform dependency that exists while creating EC2 instance with IAM instance profile](/course/assets/tf_aws_iam_dependency_module_6_video_9.png)
+
+The solution: `depends_on` argument (mas na maioria dos casos, o Terraform consegue gerenciar isso de forma automática)
+
+## Post Deployment Configuration
+
+Such as:
+* Loading an application on to a virtual machine
+* Configuring a database cluster
+* Generating files on a NFS share, based on resources that are created
+
+Can be achivied with 
+* `Providers` and `Resources` depending on what it is. For example, to manage files, there's the `file` resource. For configure a MySql database, there's a MySql provider.
+* Pass data on server startup, such as the `user_data` argument that we are already using for AWS EC2 instances ([example](/course/02_lb_web_app/instances.tf))
+  * But the downtrack to passing script is that Terraform has no way to track if it run successfully.
+* Config manager (outside Terraform), such as Ansible, Chef and Puppet.
+* Terraform provisioners
+
+### Terraform Provisioners
+
+:warning: Provioners are "usually a bad idea", since HashiCorp considers as a **Last Resource**, after all options have been considered and found lacking.
+
+- Part of a resource
+- Executed during resource creation or destruction
+- A single resource can have multiple provisioners, that will execute in the order they appear in the configuration
+- There is a special resource call `null_resource`, in case that a provisioner needs to run without creating anything
+- If provisioners fails, Terraform can fail the entire resource action or continue marrily (*"alegremente" segundo o tradutor*)
+
+This options give us the lack of no beeing tracked by Terraform, so error checking, idempotence and consistency needs to be manage in another way.
+
+**Provisioner types:**
+* File: create files and directories in a remote system
+```
+provisioner "file" {
+  connection {    # how provisioner can connect to the machine 
+                   # to copy these files
+    type = "ssh | winRM"
+    user = "root"
+    private_key = var.private_key
+    host = self.public_ip   # self attribute to refer to arguments
+                             # of the resource provisioner lives in
+  }
+
+  source = "/local/path/to/file.txt"
+  destination = "/path/to/file.txt"
+}
+```
+
+* Local-exec: allows to run script on the local machine that is executing the Terraform run
+```
+provisioner "local_exec" {
+  command = "local command here"  # such Bash, PowerShell, Perl
+}
+```
+
+* Remote-exec: allows to run a script in a remote system (can be easily replaced with startup script through something like `user_data`)
+```
+provisioner "remote_exec" {
+  # Uses configuration information defined in the resource
+
+  scripts = ["scripts", "to", "run"] # inline script, file, or list
+}
+```
+
+## Formatting
+
+`terraform fmt` formats files for standard patterns
 
