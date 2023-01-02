@@ -456,3 +456,140 @@ local.common_tags
 ### Terraform console
 
 `terraform console` starts a interactive environment where we can test different functions with real data from state
+
+## Terraform Modules
+
+Configuration that defines inputs, resources and outputs, that can be use for **code reuse**.
+
+**The set of `.tf` and `.json` files in a directory is a module**. The main configuration is know as **root modules**, that can invoke other modules to create resources.
+
+For example, the root module could invoke a lb module for create a load balancer resource. As well, the lb module could invoke both a vpc and ec2 modules:
+![Terraform Modules](/course/assets/tf_modules_module_8_video_2.png)
+
+* Modules can be used from remote or local source
+  * The most common remote repository for modules is [HashiCorp](https://registry.terraform.io/browse/modules)
+  * `Terraform init` if is not already in the same directory
+* Versioning (same way that providers are)
+
+### Module structure
+
+The only way to a parent module pass information to a child module is through input variables. The child module **has no access** to local values, resource attributes and input variables of the parent module. As well, the parent model has no access to information in the child module. The only way to do that is through **output values**, so we can pass a complex objet, an entire resource or a simple string
+
+### Module syntax
+
+For invoke a module:
+```
+module "name_label" {
+  source = "where to get the module from"
+  version = "version_expresion"
+  providers = {
+    module_provider = parent_provider
+  }
+
+  # Input variable values...
+}
+```
+
+Example:
+```
+module "taco_bucket" {
+  source = "./s3" # Local source (doesn't support version)
+
+  # Input variable values...
+  bucket_name = "mah_bucket"
+}
+```
+
+**Module references:**
+
+`module.<module_name>.<output_name>`
+
+`module.taco_bucket.bucket_id`
+
+## For expression
+
+As exists in any programing language, Terraform have a `for` expression for iterate through a list or map.
+
+For expressions are a way to create a new collection based off of another collection object.
+
+* The **input** in a for expression can be collection data type (list, set, tuple, map or object)
+* The **result** of for expression will be either a tuple or an object data type
+
+**Obs:** these are structural data types, **wich means the values inside don't all have to be of the same data type**.
+
+* Its possible to use a filter on any value from the inputs with if statemant
+
+:eight_pointed_black_star: the expression can starts with either curly braces or square brackets. The brackets or braces **will determine the response type**:
+* Square brackets `[]` indicates that the result will be a **tuple**
+* Curly braces `{}` indicates that the result will be a **object**
+
+### Create a tuple
+
+`[ for item in items : tuple_element ]`
+- `[` specify that the expression will return a tuple
+- `for` keyword indicates the for statemant
+- `item` is the iterator term
+- `items` is the input the expression will iterate
+- `:` signals the start of the value that will be stored in each tuple element in the result collection
+
+**Example:**
+
+```
+locals {
+  toppings = ["cheese", "lettuce", "salsa"]
+}
+
+[for t in local.toppings : "Globo ${t}"]
+
+# returns
+["Globo cheese", "Globo lettuce", "Globo salsa"]
+```
+
+It is also possible to use the `range` function to iterate with a integer value. The return is a list of integers:
+```
+❯ terraform console
+> range(5)
+tolist([
+  0,
+  1,
+  2,
+  3,
+  4,
+])
+```
+
+It can receive as argument the start and end index or a single argument, that will count from zero to argument value.
+
+The following example was used for get `public_subnets` while configuring AWS VPC module at [/course/05_modules/network.tf line 21](/course/05_modules/network.tf)
+
+`[for subnet in range(var.vpc_subnet_count) : cidrsubnet(var.vpc_cidr_block, 8, subnet)]`
+
+### Create an object
+
+`{ for key, value in map : obj_key => obj_value }`
+- `{` specify that the expression will return an object
+- `key, value` from the object input
+- `map` is the input the expression will iterate
+- `:` signals the start of the value that will be stored in each tuple element in the result collection
+- `obj_key` is the key of the object that will be stored in the result collection
+- `obj_value` is the value of the object with `obj_key` that will be store in the result collection
+
+**Example:**
+
+```
+locals {
+  prices = {
+    taco = "5.99"
+    burrito = "9.99"
+    enchilada = "7.99"
+  }
+}
+
+{ for i, p in local.prices : i => ceil(p) }
+
+# Returns
+{ taco = "6", burrito = "10", enchilada = "8" }
+```
+
+
+
