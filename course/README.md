@@ -591,5 +591,22 @@ locals {
 { taco = "6", burrito = "10", enchilada = "8" }
 ```
 
+## Terraform Workspaces
+
+### Multiple environments
+* Commonality and differences
+* Abstraction and reuse
+* Production access
+
+Terraform have the **workspace** feature functionality for manage the infrastructure in multiple environments. That is the recomended way of working with multiple environments.
+
+Comandos:
+* `terraform workspace new <workspace_name>`
+  * Stores state of the workspace at `terraform.tfstate.d` directory, in a folder with the workspace name.
+
+* `terraform workspace list`
+* `terraform workspace select <workspace_name>`
+
+Terraform have a special variable for get the current workspace while running. `terraform.workspace` can be used for select specific variables (like in [Using Workspaces for multiple environments](06_workspaces/))
 
 
