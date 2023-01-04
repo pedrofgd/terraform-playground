@@ -55,3 +55,48 @@ Example:
 terraform import -var-file="terraform.tfvars" \
    module.vpc.aws_subnet.public[2] subnet-ad536afg9
 ```
+
+## Terraform State
+
+* JSON format (do not touch!)
+* Resources mapping and metadata
+* Refreshed during operations
+* Stored in backend
+  * Standard & enhanced (`translation: melhorado`)
+  * Locking & workspaces
+
+### Terraform state commands
+
+- `list`: get names of all different object in state data
+- `show`: get data from specific state
+- `mv`: move an item in state (can be use for rename something, for example)
+- `rm`: remove an item from state (Terraform  will not manage the resource anymore)
+- `pull`: output current state to stdout
+- `push`: update remote state from local (overwite remote state)
+
+
+### Backends
+
+- **Is where state data is stored**
+- Backends needs to be initialized
+- Partial configuration is recommended
+- Consul (HashiCorp product), AWS S3 (with DynamoDB), Azure Storage, Google Cloud Storage
+```
+# Basic backend configuration
+terraform {
+  backend "type" {
+    # backend info
+    # authentication info
+  }
+}
+```
+
+ #### Consul overview
+
+ Is another HashiCorp product that can do a lot of different things.
+
+ One of those things is work as a K/V (key value) store
+
+ [Setting up Consul](./02_managing_state_data/README.md/#setting-up-consul)
+
+With Consul or any remote backend, is possible to keep state safe (whitout loosing it in case local computer is lose or something like that) and work with other people.
