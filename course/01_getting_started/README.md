@@ -2,6 +2,8 @@
 
 Curso: [Pluralsight: Terraform - Getting Started by Ned Bellavance](https://app.pluralsight.com/course-player?clipId=76c9a418-70e7-488e-b097-e4f9672f7cf7)
 
+[Github repository by ned1313](https://github.com/ned1313/Getting-Started-Terraform)
+
 ## Terraform
 
 - Ferramenta para automatizar criação de infraestrutura
