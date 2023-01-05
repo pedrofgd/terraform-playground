@@ -100,3 +100,90 @@ terraform {
  [Setting up Consul](./02_managing_state_data/README.md/#setting-up-consul)
 
 With Consul or any remote backend, is possible to keep state safe (whitout loosing it in case local computer is lose or something like that) and work with other people.
+
+We can also use consul as a data source for store common configurations. [Details here](./03_data_sources_and_template/README.md)
+
+## Templates
+
+- A form to work with strings
+- It's all about manipulation of strings
+- **Overloaded** term
+  - Quoted strings
+  - Herodoc syntax
+  - Provider
+  - Function
+- Enable interpolation of values and use of directives
+
+### Template strings
+
+Expressed in the configuration directly, such as:
+```
+# Simple interpolation
+"${var.prexif}-app"
+
+# Conditional directive
+"%{ if var.prefix != "" }${var.prefix}-app%{else}generic-app%{ endif }"
+
+# Collection directive with heredoc
+<<EOT
+${ for name in local.names }
+${name}-app
+%{ endfor }
+EOT
+```
+
+### Template Syntax In-line
+
+```
+# Template data source
+data "template_file" "example" {
+  count = "2"
+  template = "$${var1}-$${current_count}"
+  vars = {
+    var1 = var.some_string
+    current_count = count.index
+  }
+}
+
+# And using this template with rendered attribute
+data.template_file.example.rendered
+```
+
+It is also possible to use an external file:
+```
+# Template configuration
+data "template_file" "peer-role" {
+  template = file("peer_policy.txt")
+  vars = {
+    vpc_arn = var.vpc_arn
+  }
+}
+```
+
+The `peer_policy.txt` file, that contains a variable `vpc_arn` in the format `$(var)`:
+```
+peer_policy.txt
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": [
+                "ec2:AcceptVpcPeeringConnection",
+                "ec2:DescribeVpcPeeringConnections"
+            ],
+            "Effect": "Allow",
+            "Resource": [
+                "$(vpc_arn)"
+            ]
+        }
+    ]
+}
+```
+
+We can use an external file with `templatefile` function as well:
+```
+templatefile("peer_policy.txt", {vpc_arn = var.vpc_arn})
+```
+
+This `templatefile` function was used already in [/course/01_getting_started/04_functions_and_looping/instances.tf](/course/01_getting_started/04_functions_and_looping/instances.tf) for get information for `user_data` attribute while creating AWS EC2 instances.
