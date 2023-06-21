@@ -4,7 +4,7 @@ pipeline {
         "org.jenkinsci.plugins.terraform.TerraformInstallation" "terraform 1.4.6 linux (arm64)"
     }
     parameters {
-        string(name: 'CONSUL_STATE_PATH', defaultValue: 'applications/state/globo-primary', description: 'Path in Consul for state data')
+        string(name: 'CONSUL_STATE_PATH', defaultValue: 'networking/state/globo-primary', description: 'Path in Consul for state data')
         string(name: 'WORKSPACE', defaultValue: 'development', description:'workspace to use in Terraform')
     }
 
