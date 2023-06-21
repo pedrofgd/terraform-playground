@@ -1,0 +1,81 @@
+pipeline {
+    agent any
+    tools {
+        "org.jenkinsci.plugins.terraform.TerraformInstallation" "terraform"
+    }
+    parameters {
+        string(name: 'CONSUL_STATE_PATH', defaultValue: 'applications/state/globo-primary', description: 'Path in Consul for state data')
+        string(name: 'WORKSPACE', defaultValue: 'development', description:'workspace to use in Terraform')
+    }
+
+    environment {
+        TF_HOME = tool('terraform 1.4.6 darwin (arm64)') // point to the tool created in Jenkins portal, with terraform binaries
+        TF_INPUT = "0" // don't excpect any user input here
+        TF_IN_AUTOMATION = "TRUE" // say to terraform that we are running it in an automation
+        TF_VAR_consul_address = "host.docker.internal"
+        TF_LOG = "WARN" // log default level
+        CONSUL_HTTP_TOKEN = credentials('applications_consul_token')
+        AWS_ACCESS_KEY_ID = credentials('aws_access_key')
+        AWS_SECRET_ACCESS_KEY = credentials('aws_secret_access_key')
+        PATH = "$TF_HOME:$PATH"
+    }
+
+    stages {
+        stage('NetworkInit'){
+            steps {
+                dir('06_ci_cd_pipeline/networking'){
+                    sh 'terraform --version'
+                    sh "terraform init --backend-config='path=${params.CONSUL_STATE_PATH}'"
+                }
+            }
+        }
+        stage('NetworkValidate'){
+            steps {
+                dir('06_ci_cd_pipeline/networking'){
+                    sh 'terraform validate'
+                }
+            }
+        }
+        stage('NetworkPlan'){
+            steps {
+                dir('06_ci_cd_pipeline/networking'){
+                    script {
+                        try {
+                            sh "terraform workspace new ${params.WORKSPACE}"
+                        } catch (err) {
+                            // It will return an error if the workspaces already exists.
+                            // In this case, we'll use the existing one.
+                            sh "terraform workspace select ${params.WORKSPACE}"
+                        }
+                        sh "terraform plan -out terraform-networking.tfplan;echo \$? > status"
+                        stash name: "terraform-networking-plan", includes: "terraform-networking.tfplan"
+                    }
+                }
+            }
+        }
+        stage('NetworkApply'){
+            steps {
+                script {
+                    def apply = false
+                    try {
+                        input message: 'confirm apply', ok: 'Apply Config'
+                        apply = true
+                    } catch (err) {
+                        // In case user does not approve ('cancel' it)
+                        apply = false
+                        dir('06_ci_cd_pipeline/networking'){
+                            sh "terraform destroy -auto-approve"
+                        }
+                        currentBuild.result = 'UNSTABLE'
+                    }
+                    if(apply){
+                        dir('06_ci_cd_pipeline/networking'){
+                            unstash "terraform-networking-plan"
+                            sh 'terraform apply terraform-networking.tfplan'
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
