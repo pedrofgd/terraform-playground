@@ -179,3 +179,21 @@ Definitions (scroll down a little bit and look for script) > Pipeline script fro
 ## Running the pipeline
 
 Use `Build now` to create a new build (run the pipeline)
+
+## Troubleshoot
+
+### Terraform binary version
+
+I've built the Jenkins container on Mac M1, using `terraform 1.4.6 on darwin arm64`, but i couldn't use the same configuration on Jenkins portal, because the container was built with another OS kernel.
+
+For make sure, run:
+```
+docker exec jenkins uname -m
+# That returns the architecture: aarch64 (my case) or x86_64
+
+docker exec jenkins uname -r
+# That returns the kernel version: 5.15.49-linuxkit (my case)
+```
+
+So I had to change the terraform binary (in tools configurations) version from `darwin` to `linux`.
+
