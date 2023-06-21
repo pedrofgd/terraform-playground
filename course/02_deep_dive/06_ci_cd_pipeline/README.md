@@ -197,3 +197,40 @@ docker exec jenkins uname -r
 
 So I had to change the terraform binary (in tools configurations) version from `darwin` to `linux`.
 
+### Changed the backend source path between builds
+
+I had misconfigured the backend path for the network.
+Instead of using `networking/state/globo-primary` I was using `applications/state/globo-primary`. Once I changed the variable to the correct value, I was getting this error:
+```
++ terraform init --backend-config=path=networking/state/globo-primary
+
+[0m[1mInitializing the backend...[0m
+[0m[1mInitializing modules...[0m
+[31m[31m╷[0m[0m
+[31m│[0m [0m[1m[31mError: [0m[0m[1mBackend configuration changed[0m
+[31m│[0m [0m
+[31m│[0m [0m[0mA change in the backend configuration has been detected, which may require
+[31m│[0m [0mmigrating existing state.
+[31m│[0m [0m
+[31m│[0m [0mIf you wish to attempt automatic migration of the state, use "terraform
+[31m│[0m [0minit -migrate-state".
+[31m│[0m [0mIf you wish to store the current configuration with no changes to the
+[31m│[0m [0mstate, use "terraform init -reconfigure".
+[31m╵[0m[0m
+[0m[0m
+```
+
+I ended up updating the `Jenkinsfile` for use the `-reconfigure` option. This fixed the problem.
+```
+terraform init -reconfigure --backend-config='path=${params.CONSUL_STATE_PATH}'
+```
+
+### Error on validate the config for invalid data in Consul
+
+Just don't forget to set up Consul with the files that are expected in the network configuration:
+```
+consul kv put networking/configuration/globo-primary/net_info @globo-primary.json
+
+consul kv put networking/configuration/globo-primary/common_tags @common-tags.json
+```
+Details are in [module 5](../03_data_sources_and_template/README.md)

@@ -25,7 +25,7 @@ pipeline {
             steps {
                 dir('course/02_deep_dive/06_ci_cd_pipeline/networking'){
                     sh 'terraform --version'
-                    sh "terraform init -reconfigure --backend-config='path=${params.CONSUL_STATE_PATH}'"
+                    sh "terraform init --backend-config='path=${params.CONSUL_STATE_PATH}'"
                 }
             }
         }
@@ -61,7 +61,7 @@ pipeline {
                         input message: 'confirm apply', ok: 'Apply Config'
                         apply = true
                     } catch (err) {
-                        // In case user does not approve ('cancel' it)
+                        // In case user does not approve ('Abort' it)
                         apply = false
                         dir('course/02_deep_dive/06_ci_cd_pipeline/networking'){
                             sh "terraform destroy -auto-approve"
