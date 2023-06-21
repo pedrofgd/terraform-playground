@@ -160,7 +160,8 @@ We will be using the [Jenkinsfile](./Jenkinsfile) for set up the pipeline.
 This file declare the pipeline that we want to run and its stored with the code that will be running.
 
 **Obs:** attention on the points that may need to be adjusted in the code:
-- TF_HOME should point to the Terraform tool crated in the Jenkins portal, with the same name that was set there
+- under `tools`, `org.jenkinsci.plugins.terraform.TerraformInstallation` should point for the tool created in Jenkins portal
+- as well, TF_HOME should point to the Terraform tool crated in the Jenkins portal, with the same name that was set there
 - dir('<PATH>') should use the full path for the configuration files (`.tf` files) that will be applied, **by accessing from the root of the source code**
 
 ## Createing the pipeline in Jenkins
@@ -174,5 +175,7 @@ Definitions (scroll down a little bit and look for script) > Pipeline script fro
 - Credentials: not needed for this case, because the repo is public
 - Branch: */main (in this case)
 - Script Path: course/02_deep_dive/06_ci_cd_pipeline/networking/Jenkinsfile
+
+## Running the pipeline
 
 Use `Build now` to create a new build (run the pipeline)
