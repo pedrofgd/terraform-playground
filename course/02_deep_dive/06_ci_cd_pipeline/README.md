@@ -180,6 +180,9 @@ Definitions (scroll down a little bit and look for script) > Pipeline script fro
 
 Use `Build now` to create a new build (run the pipeline)
 
+<img width="1487" alt="Captura de Tela 2023-06-21 às 00 31 35" src="https://github.com/pedrofgd/terraform-playground/assets/50634340/2cd9d28a-558d-49cd-a002-e0bc17169e78">
+** Build #7 approved the `NetworkApply` stage. Build #8 (with yellow background) aborted the apply, so destroyed the resources (configured for convenience).
+
 ## Troubleshoot
 
 ### Terraform binary version
